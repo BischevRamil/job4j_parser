@@ -2,13 +2,13 @@ package ru.job4j.parser;
 
 import java.time.LocalDateTime;
 
-public class Vacancy {
+public class Post {
     private String name;
     private String text;
     private String link;
     private LocalDateTime date;
 
-    public Vacancy(String name, String text, String link, LocalDateTime date) {
+    public Post(String name, String text, String link, LocalDateTime date) {
         this.name = name;
         this.text = text;
         this.link = link;

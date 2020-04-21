@@ -6,34 +6,33 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.apache.log4j.Logger;
 import java.io.IOException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * @author Bischev Ramil
- * Класс парсинга вакансий JAVA-разработчика сайта SQL.RU
+ * Class parse java-developers vacancies from SQL.RU
  */
-public class ParseURL {
-    private List<Vacancy> vacancyList = new ArrayList<>();
+public class SqlRuParse implements Parse {
+    private List<Post> postList = new ArrayList<>();
     private boolean stopParse = false;
     final static Logger LOGGER = Logger.getLogger(UsageLog4j.class);
 
-    public List<Vacancy> parseURL(String url) {
+
+    public List<Post> list(String url) {
         int i = 1;
         while (!stopParse) {
-            parsePage(url + "/" + i);
+            detail(url + "/" + i);
             i++;
         }
-        return this.vacancyList;
+        return this.postList;
     }
 
-    private void parsePage(String urlPage) {
+    @Override
+    public void detail(String urlPage) {
         try {
             Document doc = Jsoup.connect(urlPage).get();
             Elements forumTable = doc.select("table.forumTable");
@@ -44,12 +43,13 @@ public class ParseURL {
                         String link = element.select("a").attr("href").trim();
                         String text = parseLink(link).trim();
                         String date = element.select("td[class=altCol]").last().text();
+//                        System.out.println(name + "\n" + link + "\n" + text + "\n" + date + "\n" + "###########");
                         LocalDateTime localDateTime = parseDateString(date);
                         if (localDateTime.isAfter(TimeOfLastRun.getDate())) {
-                            this.vacancyList.add(new Vacancy(name, text, link, localDateTime));
+                            this.postList.add(new Post(name, text, link, localDateTime));
                         } else {
                             stopParse = true;
-                            LOGGER.info("стоп парсинг");
+                            LOGGER.info("Stop parse");
                         }
                     }
                 }
@@ -61,9 +61,9 @@ public class ParseURL {
 
 
     /**
-     * Метод вытаскивания описания вакансии из ссылки
-     * @param urlLink ссылка на описание
-     * @return описание вакансии
+     * Gets description of vacancy.
+     * @param urlLink link to description.
+     * @return description.
      */
     private String parseLink(String urlLink) {
         String text = "";
@@ -77,15 +77,14 @@ public class ParseURL {
         return text;
     }
 
-
     private boolean isJava(String name) {
         return (name.contains("Java") || name.contains("java") || name.contains("JAVA"))
                 && !(name.contains("Script") || name.contains("script") || name.contains("SCRIPT"));
     }
 
     /**
-     * Метод конвертации строки даты в LocaleDateTime
-     * @param dateString строка даты
+     * Convert Date-string to LocaleDateTime
+     * @param dateString Date-string
      * @return LocaleDateTime
      */
     private static LocalDateTime parseDateString(String dateString) {

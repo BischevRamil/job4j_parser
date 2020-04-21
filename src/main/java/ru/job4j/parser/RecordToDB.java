@@ -3,12 +3,13 @@ package ru.job4j.parser;
 import org.apache.log4j.Logger;
 import java.sql.*;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * @author Ramil Bischev
- * Класс записи вакансий в БД PostgreSQL.
+ * Save records to PostgreSQL.
  */
-public class RecordToDB implements AutoCloseable {
+public class RecordToDB implements AutoCloseable, Store {
     private Connection connection;
     private Config config;
     final static Logger LOGGER = Logger.getLogger(UsageLog4j.class);
@@ -35,15 +36,20 @@ public class RecordToDB implements AutoCloseable {
         return this.connection != null;
     }
 
-    public void writeRecords(List<Vacancy> vacancyList) {
+    /**
+     * Save List of vacancies to database.
+     * @param postList List of vacancies.
+     */
+    @Override
+    public void save(List<Post> postList) {
         if (connectToDB()) {
             try (PreparedStatement statement = connection.prepareStatement(SQLItems.INSERT.query)) {
-                for (Vacancy vc : vacancyList) {
+                for (Post vc : postList) {
                     statement.setString(1, vc.getName());
                     statement.setString(2, vc.getText());
                     statement.setString(3, vc.getLink());
                     statement.setObject(4, vc.getDate());
-                    if (!this.isDublicate(vc.getName())) {
+                    if (!this.isDuplicate(vc.getName())) {
                         statement.addBatch();
                     }
                 }
@@ -55,7 +61,17 @@ public class RecordToDB implements AutoCloseable {
         }
     }
 
-    private boolean isDublicate(String name) {
+    @Override
+    public List<Post> get(Predicate<Post> filter) {
+        return null;
+    }
+
+    /**
+     * Check duplicate record in database.
+     * @param name checking name.
+     * @return true if name equals record.
+     */
+    private boolean isDuplicate(String name) {
         boolean result = false;
         try {
             Statement statement = connection.createStatement();

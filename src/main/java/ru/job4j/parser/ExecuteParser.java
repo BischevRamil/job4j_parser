@@ -3,13 +3,12 @@ package ru.job4j.parser;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
  * @author Ramil Bischev
  */
-public class Parser implements Job {
+public class ExecuteParser implements Job {
 
     @Override
     public void execute(JobExecutionContext jobExecutionContext) {
@@ -21,7 +20,7 @@ public class Parser implements Job {
 
         Config parserConfig = new Config();
         parserConfig.init();
-        ParseURL parser = new ParseURL();
-        new RecordToDB(parserConfig).writeRecords(parser.parseURL(parserConfig.get("parseurl")));
+        Parse parser = new SqlRuParse();
+        new RecordToDB(parserConfig).save(parser.list(parserConfig.get("parseurl")));
     }
 }
