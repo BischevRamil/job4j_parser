@@ -30,4 +30,9 @@ public class Post {
     public LocalDateTime getDate() {
         return this.date;
     }
+
+    @Override
+    public String toString() {
+        return name + "\n" + link + "\n" + text + "\n" + date + "\n" + "#######################################";
+    }
 }
