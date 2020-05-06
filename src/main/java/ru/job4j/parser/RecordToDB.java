@@ -1,9 +1,14 @@
 package ru.job4j.parser;
 
 import org.apache.log4j.Logger;
+
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * @author Ramil Bischev
@@ -63,7 +68,26 @@ public class RecordToDB implements AutoCloseable, Store {
 
     @Override
     public List<Post> get(Predicate<Post> filter) {
-        return null;
+        List<Post> postList = new ArrayList<>();
+        if (connectToDB()) {
+            try {
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery("SELECT * FROM vacancies;");
+                while (resultSet.next()) {
+                    String name = resultSet.getString("name");
+                    String text = resultSet.getString("text");
+                    String link = resultSet.getString("link");
+                    Timestamp date = resultSet.getTimestamp("date");
+                    Post post = new Post(name, text, link, date.toLocalDateTime());
+                    postList.add(post);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                LOGGER.error(e.getMessage());
+            }
+            return postList.stream().filter(filter).collect(Collectors.toList());
+        }
+        return postList;
     }
 
     /**
